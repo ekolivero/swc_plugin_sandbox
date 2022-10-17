@@ -1,16 +1,34 @@
-use swc_core::ecma::{
-    ast::Program,
-    transforms::testing::test,
-    visit::{as_folder, FoldWith, VisitMut},
-};
+use swc_core::ecma::atoms::JsWord;
 use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
+use swc_core::{
+    common::DUMMY_SP,
+    ecma::{
+        ast::*,
+        transforms::testing::test,
+        visit::{as_folder, FoldWith, VisitMut},
+    },
+};
+struct ConsoleOutputReplacer;
 
-pub struct TransformVisitor;
-
-impl VisitMut for TransformVisitor {
-    // Implement necessary visit_mut_* methods for actual custom transform.
-    // A comprehensive list of possible visitor methods can be found here:
-    // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
+/// An example plugin replaces any `console.log(${text})` into
+/// `console.log('changed_via_plugin')`.
+impl VisitMut for ConsoleOutputReplacer {
+    fn visit_mut_call_expr(&mut self, call: &mut CallExpr) {
+        if let Callee::Expr(expr) = &call.callee {
+            if let Expr::Member(MemberExpr { obj, .. }) = &**expr {
+                if let Expr::Ident(ident) = &**obj {
+                    if ident.sym == *"console" {
+                        println!("{:?}", call.args[0].expr);
+                        call.args[0].expr = Box::new(Expr::Lit(Lit::Str(Str {
+                            span: DUMMY_SP,
+                            value: JsWord::from("changed via plugin"),
+                            raw: None,
+                        })))
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// An example plugin function with macro support.
@@ -30,7 +48,7 @@ impl VisitMut for TransformVisitor {
 /// Refer swc_plugin_macro to see how does it work internally.
 #[plugin_transform]
 pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
-    program.fold_with(&mut as_folder(TransformVisitor))
+    program.fold_with(&mut as_folder(ConsoleOutputReplacer))
 }
 
 // An example to test plugin transform.
@@ -39,10 +57,10 @@ pub fn process_transform(program: Program, _metadata: TransformPluginProgramMeta
 // unless explicitly required to do so.
 test!(
     Default::default(),
-    |_| as_folder(TransformVisitor),
+    |_| as_folder(ConsoleOutputReplacer),
     boo,
     // Input codes
-    r#"console.log("transform");"#,
+    r#"console.log("erik olivero");"#,
     // Output codes after transformed with plugin
-    r#"console.log("transform");"#
+    r#"console.log("changed via plugin");"#
 );

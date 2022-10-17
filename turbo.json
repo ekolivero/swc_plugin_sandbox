@@ -13,6 +13,9 @@
     },
     "prepublishOnly": {
       "outputs": []
+    },
+    "test": {
+      "outputs": []
     }
   }
 }

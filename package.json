@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "prepublishOnly": "turbo run prepublishOnly",
+    "test": "turbo run test",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",

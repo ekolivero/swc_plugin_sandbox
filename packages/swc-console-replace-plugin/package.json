@@ -1,0 +1,13 @@
+{
+    "name": "console-replace",
+    "version": "0.1.0",
+    "description": "SWC PCI Compliance plugin for Next.js",
+    "author": "",
+    "license": "ISC",
+    "keywords": ["swc-plugin"],
+    "main": "target/wasm32-wasi/release/console-replace.wasm",
+    "scripts": {
+        "prepublishOnly": "cargo build --release"
+    },
+    "files": []
+}
